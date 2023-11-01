@@ -15,6 +15,15 @@ public class drawMesh : MonoBehaviour
 
         Debug.LogError("fileName: " + fileName);
 
+        float xMin = float.MaxValue;
+        float xMax = float.MinValue;
+
+        float yMin = float.MaxValue;
+        float yMax = float.MinValue;
+
+        float zMin = float.MaxValue;
+        float zMax = float.MinValue;
+
         if (File.Exists(filePath))
         {
             string[] lines = File.ReadAllLines(filePath);
@@ -30,39 +39,20 @@ public class drawMesh : MonoBehaviour
                     float x = float.Parse(coords[0]);
                     float y = float.Parse(coords[1]);
                     float z = float.Parse(coords[2]);
+                    
+                    if (xMax < x) { xMax = x; }
+                    if (xMin > x) { xMin = x; }
+
+                    if (yMax < y) { yMax = y; }
+                    if (yMin > y) { yMin = y; }
+
+                    if (zMax < z) { zMax = z; }
+                    if (zMin > z) { zMin = z; }
+
                     vertices.Add(new Vector3(x, y, z));
+
                 }
             }
-
-            if (vertices.Count % 3 == 0)
-            {
-                Mesh mesh = new Mesh();
-                mesh.vertices = vertices.ToArray();
-                int[] triangles = new int[vertices.Count];
-
-                for (int i = 0; i < vertices.Count; i++)
-                {
-                    triangles[i] = i;
-                }
-
-                mesh.triangles = triangles;
-
-                GameObject meshObject = new GameObject("CustomMesh");
-                MeshFilter meshFilter = meshObject.AddComponent<MeshFilter>();
-                MeshRenderer meshRenderer = meshObject.AddComponent<MeshRenderer>();
-                meshFilter.mesh = mesh;
-                meshRenderer.material = material;
-
-                mesh.RecalculateNormals();
-            }
-            else
-            {
-                Debug.LogError("Vertex count is not a multiple of 3.");
-            }
-        }
-        else
-        {
-            Debug.LogError("File not found: " + filePath);
         }
     }
 }
