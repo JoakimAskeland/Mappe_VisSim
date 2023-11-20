@@ -23,14 +23,18 @@ public class drawPlane : MonoBehaviour
             {
                 lineCounter++;
 
-                if (lineCounter != 1)
-                {
-                    if (lineCounter % 100 != 0)
-                    {
-                        continue;
-                    }
+                //if (lineCounter != 1)
+                //{
+                //    if (lineCounter % 100 != 0)
+                //    {
+                //        continue;
+                //    }
 
-                }
+                //}
+
+                if (lineCounter > 30)
+                    break;
+
 
                 string[] coords = line.Split(' '); // This is if we use 'space' to seperate vertices in the txt file
 
