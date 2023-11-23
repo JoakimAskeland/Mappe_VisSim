@@ -16,7 +16,7 @@ public class ballMovement : MonoBehaviour
     public float mass = 1f;
     [SerializeField] private Vector3 acceleration = Vector3.zero;
     [SerializeField] private Vector3 velocity = new Vector3(40f, 1f, 40f);
-    float radius = 0.5f;
+    float radius = 5f;
     private Vector3 previousNormal;
 
     // Start is called before the first frame update
@@ -37,7 +37,7 @@ public class ballMovement : MonoBehaviour
     }
 
     // Update is called once per frame
-    void LateUpdate()
+    void FixedUpdate()
     {
         barycentricCoords();
 
@@ -56,7 +56,6 @@ public class ballMovement : MonoBehaviour
             Vector3 v0 = Vector3.zero;
             Vector3 v1 = Vector3.zero;
             Vector3 v2 = Vector3.zero;
-
 
             v0 = trianglePoints[i];
             v1 = trianglePoints[i + 1];
@@ -100,20 +99,21 @@ public class ballMovement : MonoBehaviour
 
             if (isInsideTriangle)
             {
-                Debug.Log("Ball is inside triangle");
+                //Debug.Log("Ball is inside triangle");
 
                 triangleNormal = Vector3.Cross(v1 - v0, v2 - v0).normalized;
                 var triangleNormalnonNormalized = Vector3.Cross(v1 - v0, v2 - v0);
 
                 // Calculating acceleration
                 Vector3 gravityProjection = -Vector3.Dot(gravity, triangleNormal) * triangleNormal;
-                //Debug.Log("gravityp: " + gravityProjection);
-                //Debug.Log("TriangleNormal: " + triangleNormal);
-                //Debug.Log("TriangleNormalnonNormalized: " + triangleNormalnonNormalized);
+                Debug.Log("gravityprojection: " + gravityProjection);
+                Debug.Log("TriangleNormal: " + triangleNormal);
+                Debug.Log("TriangleNormalnonNormalized: " + triangleNormalnonNormalized);
                 acceleration = gravityProjection + gravity;
 
-                //Debug.Log("Acceleration: " + acceleration + " | Velocity: " + velocity);
-
+                Debug.Log("Acceleration: " + acceleration + " | Velocity: " + velocity + " | normal: " + triangleNormal);
+                velocity = Vector3.ProjectOnPlane(velocity, triangleNormal); // Anders
+                Debug.Log("Acceleration: " + acceleration + " | Velocity: " + velocity + " | normal: " + triangleNormal);
                 var newVelocity = velocity + acceleration * Time.deltaTime;
                 velocity = newVelocity;
 
@@ -127,7 +127,7 @@ public class ballMovement : MonoBehaviour
                 // New triangle
                 if (!sameNormal(triangleNormal, previousNormal))
                 {
-                    Debug.Log("New triangle");
+                    //Debug.Log("New triangle");
 
                     previousNormal = triangleNormal;
 
@@ -138,7 +138,7 @@ public class ballMovement : MonoBehaviour
             {
                 //Debug.Log("Ball is outside triangle");
 
-                transform.position += gravity * Time.deltaTime;
+                transform.position += velocity*Time.deltaTime + 0.5f*gravity * Time.deltaTime * Time.deltaTime; // Anders
             }
             //isInsideTriangle = false;
 

@@ -131,6 +131,7 @@ public class TestAvPlan : MonoBehaviour
             {
                 for (int z = 0; z < resolution; z++)
                 {
+                    // Legge til nabo informasjon her??? -----------------------------------------------------------------------------------
                     int i = (x * resolution) + x + z;
                     // First triangle
                     indices.Add(i);
@@ -209,5 +210,47 @@ public class TestAvPlan : MonoBehaviour
         float w = 1 - u - v;
 
         return new Vector3(u, v, w); // Feil rekkefølge?
+    }
+
+    public Vector3 baryc(Vector2 objectPos)
+    {
+        Vector3 v1 = new Vector3();
+        Vector3 v2 = new Vector3();
+        Vector3 v3 = new Vector3();
+
+        Vector3 baryc = new Vector3(-1, -1, -1);
+
+        int currentTriangle = 0;
+        int previousTriangle = -1;
+
+        for (int i = 0; i < mesh.triangles.Length / 3; i++)
+        {
+            int i1 = mesh.triangles[i * 3 + 1];
+            int i2 = mesh.triangles[i * 3 + 2];
+            int i3 = mesh.triangles[i * 3 + 0];
+
+            v1 = mesh.vertices[i1];
+            v2 = mesh.vertices[i2];
+            v3 = mesh.vertices[i3];
+
+            baryc = getBary(new Vector2(v1.x, v1.z), new Vector2(v2.x, v2.z), new Vector2(v3.x, v3.z), objectPos);
+
+            if (baryc is { x: >= 0, y: >= 0, z: >= 0 })
+            {
+                currentTriangle = i;
+                break;
+            }
+        }
+
+        if (previousTriangle != currentTriangle)
+        {
+            previousTriangle = currentTriangle;
+            //previousNormal = normal;
+            Vector3 v1v2 = v2 - v1;
+            Vector3 v1v3 = v3 - v1;
+            Vector3 normal = Vector3.Cross(v1v2, v1v3).normalized;
+        }
+
+        return baryc.x * v1 + baryc.y * v2 + baryc.z * v3;
     }
 }
