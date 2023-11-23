@@ -11,6 +11,9 @@ public class TestAvPlan : MonoBehaviour
 
     // LINUS NORDBAKKEN NAGY
     [SerializeField][Range(1, 100)] private int resolution;
+    public Vector3 previousNormalV;
+    public Vector3 normalV;
+    public bool enteredTriangle = false;
 
     public List<Vector3> vertices = new List<Vector3>();
 
@@ -245,10 +248,11 @@ public class TestAvPlan : MonoBehaviour
         if (previousTriangle != currentTriangle)
         {
             previousTriangle = currentTriangle;
-            //previousNormal = normal;
+            previousNormalV = normalV; 
             Vector3 v1v2 = v2 - v1;
             Vector3 v1v3 = v3 - v1;
-            Vector3 normal = Vector3.Cross(v1v2, v1v3).normalized;
+            normalV = Vector3.Cross(v1v2, v1v3).normalized;
+            enteredTriangle = true;
         }
 
         return baryc.x * v1 + baryc.y * v2 + baryc.z * v3;
