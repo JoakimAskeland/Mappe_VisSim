@@ -212,7 +212,7 @@ public class TestAvPlan : MonoBehaviour
         float v = (dot00 * dot12 - dot01 * dot02) / denom;
         float w = 1 - u - v;
 
-        return new Vector3(u, v, w); // Feil rekkefølge?
+        return new Vector3(w, u, v); // Feil rekkefølge? Originalt u, v, w
     }
 
     public Vector3 baryc(Vector2 objectPos)
