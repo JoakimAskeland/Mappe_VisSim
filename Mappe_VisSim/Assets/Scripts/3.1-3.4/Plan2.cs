@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
 
-public class TestAvPlan : MonoBehaviour
+public class Plan2 : MonoBehaviour
 {
     public string fileName = "hoydedata.txt";
     private Vector3[] points;
@@ -38,8 +38,6 @@ public class TestAvPlan : MonoBehaviour
 
         if (File.Exists(filePath))
         {
-            //StreamReader sr = new StreamReader(filePath);
-            //int lines = int.Parse(sr.ReadLine());
             string[] lines = File.ReadAllLines(filePath);
             points = new Vector3[lines.Length];
 
@@ -75,7 +73,7 @@ public class TestAvPlan : MonoBehaviour
 
             // LEST INN PUNKTER HITTIL
 
-            //LINUS NORDBAKKEN NAGY (TESTING)
+            //LINUS NORDBAKKEN NAGY
             // Finding new min and max values for vertex placement
             xMin = float.MaxValue;
             xMax = float.MinValue;
@@ -100,9 +98,10 @@ public class TestAvPlan : MonoBehaviour
                 if (zMin > z) { zMin = z; }
             }
 
-            //List<Vector3> vertices = new List<Vector3>();
-            List<Vector2> uv = new List<Vector2>();
-            List<int> indices = new List<int>();
+            int numVertices = (resolution + 1) * (resolution + 1);
+            Vector3[] vertices = new Vector3[numVertices];
+            Vector2[] uv = new Vector2[numVertices];
+            int[] indices = new int[resolution * resolution * 6]; // 2 triangler per rute
 
             // Make perfect square
             float max = xMax * 0.5f;
@@ -114,68 +113,56 @@ public class TestAvPlan : MonoBehaviour
             float min = -max;
             float size = max - min;
             float h = size / resolution;
-            float hSize = size / 2.0f;
+            //float hSize = size / 2.0f;
 
-            for (int z = 0; z < resolution + 1; z++)
+            int vertIndex = 0;
+            int index = 0;
+
+            for (int z = 0; z <= resolution; z++)
             {
-                for (int x = 0; x < resolution + 1; x++)
+                for (int x = 0; x <= resolution; x++)
                 {
 
                     Vector3 vertex = new Vector3(min + (x * h), 0, min + (z * h));
                     Vector2 uvTemp = new Vector2(x / (float)resolution, z / (float)resolution);
-                    //vertex.y = CheckForPoints(new Vector2(vertex.x, vertex.z), h); // Idk bro
                     vertex.y = getHeight(new Vector2(vertex.x, vertex.z), h);
-                    vertices.Add(vertex);
-                    uv.Add(uvTemp);
-                }
-            }
-            mesh.vertices = vertices.ToArray();
-            mesh.uv = uv.ToArray();
+                    
+                    vertices[vertIndex] = vertex;
+                    uv[vertIndex] = uvTemp;
 
-            // Indices
-            for (int x = 0; x < resolution; x++)
-            {
-                for (int z = 0; z < resolution; z++)
-                {
-                    // DENNE KODEN FUNGERER (INGEN NABOINFORMASJON), IKKE SLETT
-                    //// Legge til nabo informasjon her??? -----------------------------------------------------------------------------------
-                    //int i = (x * resolution) + x + z;
-                    //// First triangle
-                    //indices.Add(i);
-                    //indices.Add(i + resolution + 1);
-                    //indices.Add(i + resolution + 2);
-                    //// Second triangle
-                    //indices.Add(i);
-                    //indices.Add(i + resolution + 2);
-                    //indices.Add(i + 1);
+                    if (x < resolution && z < resolution)
+                    {
+                        // Kalkulerer vertex indices for denne firkanten/to triangelene
+                        int vertIndex1 = vertIndex;
+                        int vertIndex2 = vertIndex + resolution + 1;
+                        int vertIndex3 = vertIndex + resolution + 2;
 
-                    int i = (x * resolution) + x + z;
+                        // Legger til vertices i triangelet til dictionary
+                        AddTriangleToVertex(vertIndex1, vertIndex2, vertIndex3);
 
-                    // Kalkulerer vertex indices for denne firkanten/to triangelene
-                    int vertIndex1 = i;
-                    int vertIndex2 = i + resolution + 1;
-                    int vertIndex3 = i + resolution + 2;
+                        // Første triangel
+                        indices[index] = vertIndex1;
+                        indices[index + 1] = vertIndex2;
+                        indices[index + 2] = vertIndex3;
 
-                    // Legger til vertices i triangelet til dictionary
-                    AddTriangleToVertex(vertIndex1, vertIndex2, vertIndex3);
+                        // Andre triangel
+                        indices[index + 3] = vertIndex1;
+                        indices[index + 4] = vertIndex3;
+                        indices[index + 5] = vertIndex1 + 1;
 
-                    // First triangle
-                    indices.Add(vertIndex1);
-                    indices.Add(vertIndex2);
-                    indices.Add(vertIndex3);
+                        index += 6;
+                    }
 
-                    // Second triangle
-                    indices.Add(vertIndex1);
-                    indices.Add(vertIndex3);
-                    indices.Add(vertIndex1 + 1);
+                    vertIndex++;
                 }
             }
 
-            mesh.triangles = indices.ToArray();
+            mesh.vertices = vertices;
+            mesh.uv = uv;
+            mesh.triangles = indices;
             mesh.RecalculateNormals();
             mesh.RecalculateBounds();
             GetComponent<MeshFilter>().mesh = mesh;
-            GetComponent<MeshCollider>().sharedMesh = mesh;
         }
     }
 
@@ -190,13 +177,13 @@ public class TestAvPlan : MonoBehaviour
         Vector2 botL = new Vector2(vertex.x - size, vertex.y - size);
         Vector2 botR = new Vector2(vertex.x + size, vertex.y - size);
 
-        for (int i = 0; i < points.Length; i+= 50) // Redusere fra 50? Å sette den til 10 og 20 gjør at det bruker eksepsjonelt lang tid på å loade, men å sette den mer enn 50 reduserer tiden. 100 funker greit, 1000 gjør det om til et bybilde med skyskrapere, ikke et brukbart plan
+        for (int i = 0; i < points.Length; i += 50) // Å sette den til 10 og 20 gjør at det bruker eksepsjonelt lang tid på å loade, men å sette den mer enn 50 reduserer tiden. 100 funker greit, 1000 gjør det om til et bybilde med skyskrapere, ikke et brukbart plan
         {
             Vector3 temp = getBary(topL, topR, botL, new Vector2(points[i].x, points[i].z));
 
             if (temp is { x: >= 0, y: >= 0, z: >= 0 })
                 values.Add(points[i].y);
-            
+
             else
             {
                 temp = getBary(topR, botR, botL, new Vector2(points[i].x, points[i].z));
@@ -252,35 +239,44 @@ public class TestAvPlan : MonoBehaviour
         int currentTriangle = 0;
         int previousTriangle = -1;
 
-        for (int i = 0; i < mesh.triangles.Length / 3; i++)
+        // Find the nearest vertex to objectPos
+        int nearestVertexIndex = FindNearestVertexIndex(objectPos);
+
+        if (nearestVertexIndex != -1 && vertexToTriangles.ContainsKey(nearestVertexIndex))
         {
-            int i1 = mesh.triangles[i * 3 + 1];
-            int i2 = mesh.triangles[i * 3 + 2];
-            int i3 = mesh.triangles[i * 3 + 0];
+            List<int> triangles = vertexToTriangles[nearestVertexIndex];
 
-            v1 = mesh.vertices[i1];
-            v2 = mesh.vertices[i2];
-            v3 = mesh.vertices[i3];
-
-            baryc = getBary(new Vector2(v1.x, v1.z), new Vector2(v2.x, v2.z), new Vector2(v3.x, v3.z), objectPos);
-
-            if (baryc is { x: >= 0, y: >= 0, z: >= 0 })
+            foreach (int triangleIndex in triangles)
             {
-                currentTriangle = i;
-                break;
+                int i1 = mesh.triangles[triangleIndex * 3 + 1];
+                int i2 = mesh.triangles[triangleIndex * 3 + 2];
+                int i3 = mesh.triangles[triangleIndex * 3 + 0];
+
+                v1 = mesh.vertices[i1];
+                v2 = mesh.vertices[i2];
+                v3 = mesh.vertices[i3];
+
+                baryc = getBary(new Vector2(v1.x, v1.z), new Vector2(v2.x, v2.z), new Vector2(v3.x, v3.z), objectPos);
+
+                if (baryc is { x: >= 0, y: >= 0, z: >= 0 })
+                {
+                    currentTriangle = triangleIndex;
+                    break;
+                }
             }
         }
 
         if (previousTriangle != currentTriangle)
         {
             previousTriangle = currentTriangle;
-            previousNormalV = normalV; 
+            previousNormalV = normalV;
             Vector3 v1v2 = v2 - v1;
             Vector3 v1v3 = v3 - v1;
             normalV = Vector3.Cross(v1v2, v1v3).normalized;
             enteredTriangle = true;
         }
 
+        // Gir verdenskoordinater
         return baryc.x * v1 + baryc.y * v2 + baryc.z * v3;
     }
 
@@ -305,5 +301,31 @@ public class TestAvPlan : MonoBehaviour
         {
             vertexToTriangles[vertexIndex].Add(connectedVertexIndex);
         }
+    }
+
+    // Finner nærmeste vertex index til ballens(objectPos) posisjon
+    private int FindNearestVertexIndex(Vector2 objectPos)
+    {
+        int nearestVertexIndex = -1;
+        float minDistance = float.MaxValue;
+
+        for (int i = 0; i < mesh.vertices.Length; i++)
+        {
+            Vector3 vertex = mesh.vertices[i];
+            Vector2 vertexPosition = new Vector2(vertex.x, vertex.z);
+
+            // Finner avstanden mellom vertex og ballen(objectPos)
+            float distance = Vector2.Distance(vertexPosition, objectPos);
+
+            // Sjekker om dette vertexet er nærmere enn det som for øyeblikket er markert som nærmeste vertex
+            if (distance < minDistance)
+            {
+                minDistance = distance; 
+                nearestVertexIndex = i;
+                //Debug.Log("nearestVertexIndex: " + nearestVertexIndex);
+            }
+        }
+
+        return nearestVertexIndex;
     }
 }

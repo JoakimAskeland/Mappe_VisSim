@@ -1,50 +1,48 @@
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
-public class testAvBall : MonoBehaviour
+public class rollingBall : MonoBehaviour
 {
-    [SerializeField] public TestAvPlan trianglePlane;
+    [SerializeField] public Plan2 trianglePlane;
     [SerializeField] public float radius = 5f;
+    [SerializeField] public float mass = 1f;
     [SerializeField] private Vector3 gravity = new Vector3(0f, -9.81f, 0f);
     [SerializeField] private Vector3 acceleration = Vector3.zero;
 
-    float mass = 1f;
-
     public Vector3 currentVelocity = new();
     public Vector3 newVelocity = Vector3.zero;
-    Vector3 previousPosition;
     Vector3 newPosition;
 
-    //private int triangle = -1;
-    private float baryY;
-
-    private void Awake()
+    // Start is called before the first frame update
+    void Start()
     {
-        previousPosition = transform.position;
         newPosition = transform.position;
         transform.localScale = new Vector3(radius * 2f, radius * 2f, radius * 2f);
     }
 
-    private void FixedUpdate()
+    // Update is called once per frame
+    void FixedUpdate()
     {
         Vector3 force = new Vector3();
 
         if (CollisionDetectionPlane())
         {
-            Debug.Log("Collision detected");
-            Vector3 surfaceNormal = trianglePlane.normalV;
-            Vector3 normalF = -Vector3.Dot(gravity, surfaceNormal) * surfaceNormal;
-            force = gravity + normalF;
+            //Debug.Log("Collision detected");
+            Vector3 triangleNormal = trianglePlane.normalV;
+            Vector3 normalForce = -Vector3.Dot(gravity, triangleNormal) * triangleNormal;
+            force = gravity + normalForce;
             acceleration = force;
-            currentVelocity = Vector3.ProjectOnPlane(currentVelocity, normalF);
+            currentVelocity = Vector3.ProjectOnPlane(currentVelocity, normalForce);
 
             if (trianglePlane.enteredTriangle)
             {
                 trianglePlane.enteredTriangle = false;
-                normalF = (surfaceNormal + surfaceNormal).normalized;
-                currentVelocity = Vector3.ProjectOnPlane(currentVelocity, normalF);
+                normalForce = (triangleNormal + triangleNormal).normalized;
+                currentVelocity = Vector3.ProjectOnPlane(currentVelocity, normalForce);
+
+                // Bouncing effect
+                //currentVelocity = currentVelocity + new Vector3(0, 20, 0);
             }
         }
         else
@@ -62,20 +60,19 @@ public class testAvBall : MonoBehaviour
         Debug.DrawRay(transform.position, gravity, Color.red);
     }
 
+    // God hjelp fra Linus Norbakken Nagy
     private bool CollisionDetectionPlane()
     {
-        Vector3 pos = transform.position;
-        Vector3 baryc = trianglePlane.baryc(new Vector2(pos.x, pos.z));
-        Vector3 normalVec = trianglePlane.normalV;
+        Vector3 ballPosition = transform.position;
+        Vector3 barycentricCoordinates = trianglePlane.baryc(new Vector2(ballPosition.x, ballPosition.z));
+        Vector3 normalVector = trianglePlane.normalV;
+        float dot = Vector3.Dot(barycentricCoordinates - ballPosition, normalVector);
 
-        float dotProduct = Vector3.Dot(baryc - pos, normalVec);
-
-        if (Mathf.Abs(dotProduct) <= radius)
+        if (Mathf.Abs(dot) <= radius)
         {
-            baryY = baryc.y;
-            Vector3 collisionPos = pos + dotProduct * normalVec;
             return true;
         }
+
         return false;
     }
 }

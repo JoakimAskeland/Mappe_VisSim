@@ -62,12 +62,6 @@ public class cubeSpawner : MonoBehaviour
                     if (zMin > z) { zMin = z; }
 
                     points[i] = new Vector3(x, y, z);
-
-                    //vertices.Add(new Vector3(x, y, z));
-
-                    //Vector3 position = new Vector3(x, y, z);
-                    //CreateCube(position);
-
                 }
             }
 
@@ -92,7 +86,6 @@ public class cubeSpawner : MonoBehaviour
 
             }
 
-            //RenderCubes();
             rp = new RenderParams(cubeMaterial);
         }
         else
@@ -100,24 +93,6 @@ public class cubeSpawner : MonoBehaviour
             Debug.LogError("File not found");
         }
     }
-
-    //void CreateCube(Vector3 position)
-    //{
-    //    GameObject cube = Instantiate(cubePrefab, position, Quaternion.identity);
-    //    cube.transform.localScale = new Vector3(cubeSize, cubeSize, cubeSize);
-    //}
-
-    //void RenderCubes()
-    //{
-    //    Debug.LogError("RenderCubes");
-    //    MaterialPropertyBlock props = new MaterialPropertyBlock();
-    //    GameObject cubeContainer = new GameObject("CubeContainer");
-    //    for (int i = 0; i < matrices.Count; i++)
-    //    {
-    //        GameObject cube = Instantiate(cubePrefab, cubeContainer.transform);
-    //        props.SetMatrix("_ObjectToWorld", matrices[i]);
-    //    }
-    //}
 
     // Update is called once per frame
     void Update()
